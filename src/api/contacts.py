@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
@@ -16,10 +16,16 @@ router = APIRouter(prefix="/contacts", tags=["contacts"])
 
 @router.get("/", response_model=List[ContactResponse])
 async def read_contacts(
-    skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)
+    skip: int = 0,
+    limit: int = 10,
+    name: Optional[str] = Query(None),
+    surname: Optional[str] = Query(None),
+    email: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
 ):
     contact_service = ContactService(db)
-    contacts = await contact_service.get_contacts(skip, limit)
+    contacts = await contact_service.get_contacts(skip, limit, name, surname, email)
+
     return contacts
 
 
@@ -62,3 +68,15 @@ async def remove_contact(contact_id: int, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found"
         )
     return contact
+
+
+router.get("/birthdays-next-week", response_model=List[ContactResponse])
+
+
+@router.get("/birthdays/upcoming", response_model=List[ContactResponse])
+async def get_upcoming_birthdays(
+    days: int = Query(7), db: AsyncSession = Depends(get_db)
+):
+    contact_service = ContactService(db)
+    contacts = await contact_service.get_upcoming_birthdays(days)
+    return contacts
