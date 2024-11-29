@@ -2,7 +2,11 @@ from fastapi import FastAPI
 
 from src.api import utils, contacts
 
-app = FastAPI()
+app = FastAPI(
+    title="Contacts API",
+    description="goit-pythonweb-hw-08",
+    version="1.0.0",
+)
 
 app.include_router(utils.router, prefix="/api")
 app.include_router(contacts.router, prefix="/api")
